@@ -41,14 +41,73 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //Write your code here//
 
 //CHALLENGE 1: GET All posts
+app.get("/posts", (req, res) => {
+  res.json(posts);
+});
 
 //CHALLENGE 2: GET a specific post by id
+app.get("/posts/:id", (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const targetPost = posts.find((post) => post.id === targetId);
+  if (targetPost) {
+    res.json(targetPost);
+  } else {
+    res.status(404).json({message: `Post with id ${targetId} is not found.`})
+  }
+});
 
 //CHALLENGE 3: POST a new post
+app.post("/posts", (req, res) =>{
+  lastId += 1;
+  const newId = lastId;
+  const newPost = {
+    id: newId,
+    title:  req.body.title,
+    content: req.body.content,
+    author: req.body.author,
+    date: new Date(),
+  };
+
+  posts.push(newPost);
+  res.status(201).json(newPost);
+});
 
 //CHALLENGE 4: PATCH a post when you just want to update one parameter
+app.patch("/posts/:id", (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const targetIdx = posts.findIndex((post) => post.id === targetId)
+  
+  if (targetIdx > -1){
+    const targetPost = posts[targetIdx];
+    if (req.body.title){
+      targetPost.title = req.body.title;
+    }
+    if (req.body.content){
+      targetPost.content = req.body.content;
+    }
+    if (req.body.author){
+      targetPost.author = req.body.author;
+    }
+    // posts[targetIdx] = targetPost;
+    res.json(targetPost);
+
+  } else {
+    res.status(404).json({message: `Post with id ${targetId} is not found.`});
+  }
+});
 
 //CHALLENGE 5: DELETE a specific post by providing the post id.
+app.delete("/posts/:id", (req, res) =>{
+  const targetId = parseInt(req.params.id);
+  const targetIdx = posts.findIndex((post) => post.id === targetId)
+  if (targetIdx > -1){
+    posts.splice(targetIdx, 1);
+    res.json({message: `Post with id ${targetId} is deleted.`});
+  } else {
+    res.status(404).json({message: `Post with id ${targetId} is not found.`});
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`API is running at http://localhost:${port}`);

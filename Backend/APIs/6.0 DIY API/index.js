@@ -8,20 +8,98 @@ const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //1. GET a random joke
+app.get("/random", (req, res) => {
+  const randomIdx = Math.floor(Math.random() * jokes.length);
+  res.json(jokes[randomIdx]);
+});
 
 //2. GET a specific joke
+app.get("/jokes/:id", (req, res) => {
+  const id = parseInt(req.params.id); // using req.params because id is a path variable
+  const thisJoke = jokes.find((joke) => joke.id === id);
+  res.json(thisJoke);
+});
 
 //3. GET a jokes by filtering on the joke type
+app.get("/filter", (req, res) => {
+  const thisType = req.query.type;    // using req.query because type is a query param
+  const jokeList = jokes.filter((joke) => joke.jokeType === thisType);
+  res.json(jokeList);
+});
 
 //4. POST a new joke
+app.post("/jokes", (req, res) => {
+  const newJoke = {
+    id: jokes.length + 1,
+    jokeText: req.body.text,  // using req.body because text and type are in body part,check Postman
+    jokeType: req.body.type,
+  };
+  
+  jokes.push(newJoke);
+  res.json(newJoke);
+});
 
 //5. PUT a joke
+app.put("/jokes/:id", (req, res) => {
+  const thisId = parseInt(req.params.id); // using req.params because id is a path variable
+  const thisJoke = {
+    id: thisId,
+    jokeText: req.body.text,
+    jokeType: req.body.type,
+  }
+  const idx = jokes.findIndex((joke) => joke.id === thisId);
+  jokes[idx] = thisJoke;
+  res.json(thisJoke);
+});
 
 //6. PATCH a joke
+app.patch("/jokes/:id", (req, res) => {
+  const thisId = parseInt(req.params.id); // using req.params because id is a path variable
+  const targetIdx = jokes.findIndex((joke) => joke.id === thisId);
+  const targetJoke = jokes[targetIdx];
+  if (req.body.text !== "") {     // For undefined or null: !req.body.text
+    console.log("has text");
+    targetJoke.jokeText = req.body.text;
+  }
+  if (req.body.type !== "") {
+    console.log("has type");
+    targetJoke.jokeType = req.body.type;
+  }
+  
+  jokes[targetIdx] = targetJoke;
+  res.json(targetJoke);
+});
 
 //7. DELETE Specific joke
+app.delete("/jokes/:id", (req, res) => {
+  const thisId = parseInt(req.params.id); // using req.params because id is a path variable
+  const targetIdx = jokes.findIndex((joke) => joke.id === thisId);
+  
+  if (targetIdx > -1) {
+    jokes.splice(targetIdx, 1); // Remove 1 element from index targetIdx
+    // sendStatus() is a shortcut for setting the status code with .status() and 
+    // then sending the status message as the response body using .send().
+    res.sendStatus(200);  
+  } else {
+    res
+      .status(404)
+      .json({error: `The joke with index ${targetIdx} does not exist.`});
+  }
+});
 
 //8. DELETE All jokes
+app.delete("/all", (req, res) => {
+  const userKey = req.query.key; 
+  if (userKey === masterKey) {
+    jokes = [];
+    res.sendStatus(200);
+  } else {
+    res
+      .status(404)
+      .json({error: "Invalid key."});
+  }
+  
+});
 
 app.listen(port, () => {
   console.log(`Successfully started server on port ${port}.`);
